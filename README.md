@@ -78,7 +78,7 @@ se le asignara un id (long incremental) retornando como respuesta el id del usua
 
   4. Métodos a implementar
 
-     - Método POST para guardar un usuario dentro de una sala  retornado un id
+     - Método POST para guardar un usuario dentro de una sala 1 retornado un id
        - el json de ejemplo que debemos guardar:
 
                {  
@@ -88,7 +88,8 @@ se le asignara un id (long incremental) retornando como respuesta el id del usua
                    "rol": "admin"  
                    "dni": "23454234W"  
                 } 
-     - Método GET donde obtendremos el usuario en base al id del usuario obtenido
+
+     - Método GET donde obtendremos el usuario en base al id del usuario obtenido que se aloja dentro de la sala 1. 
     
      - nota: no implementar la creación de sala e imaginar que la sala ya está creada. 
 

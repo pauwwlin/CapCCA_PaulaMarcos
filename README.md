@@ -61,7 +61,7 @@
 Tenemos diferentes salas que se identifican cada una con id diferente (long incremental) y en cada sala debemos poder guardar usuarios.  
 Una sala podrá tener N usuarios y un usuario podrá estar en una única sala. Cuando se guarda el usuario en la sala, se valida contra una api externa para chequear si el dni es válido y  
 se le asignara un id (long incremental) retornando como respuesta el id del usuario guardado.
- 
+
 
 
 3. Requisitos
@@ -89,6 +89,8 @@ se le asignara un id (long incremental) retornando como respuesta el id del usua
                    "dni": "23454234W"  
                 } 
      - Método GET donde obtendremos el usuario en base al id del usuario obtenido
+    
+     - nota: no implementar la creación de sala e imaginar que la sala ya está creada. 
 
 
 5. Condiciones a tener en cuenta opcionales  

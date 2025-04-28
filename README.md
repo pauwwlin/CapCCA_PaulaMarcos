@@ -1,138 +1,175 @@
+# Capgemini-Test
 
-# capgemini-test
+## Prerrequisitos
 
-1. prerequisitos
-   - java 17
-   - maven
-   - git
-   - docker
+Asegúrese de tener instalados los siguientes componentes antes de ejecutar el proyecto:
 
+- Java 17
+- Maven
+- Git
+- Docker
 
+---
 
-1. Ejecución del docker para tener infraestructura necesaria:
-   - git clone <repo>
-   - dentro de la carpeta docker
-   - docker-compose up
+## Ejecución del Docker para tener la infraestructura necesaria
 
-
-
-2. el docker tendrá dos contenedores     
-   - postgres con la base de datos   
-   - mock-server con una api expuesta en el puerto 1080
-
+1. Clone el repositorio:
+   bash
+   git clone <url-del-repositorio>
    
+2. Navegue a la carpeta docker:
+   bash
+   cd docker
    
-         api check-dni:   
-              method: PATCH  
-                url: http//localhost:1080/check-dni
-                body:                  
-                   {  
-                   "dni": <dni>"
-                    } 
-               reponse:                   
-                ok - http: 200 para cualquier dni  
+3. Levante los contenedores con Docker Compose:
+   bash
+   docker-compose up
    
-                ko - http: 409 que sea 99999999w               
-   
-           api notification:   
-              method: post  
-              url: http//localhost:1080/email  
-                  body:                   
-                     {  
-                              "email": <email, 
-                               "message": <msg
-                            } 
-                   reponse:                   
-                              ok - http: 200  
-               method: post  
-                  url: http//localhost:1080/sms
-                      body:                
-                             {  
-                            "phone": <phone,
-                                "message": <msg
-                             } 
-                       reponse:     
-                     ok - http: 200
 
+### Contenedores del Docker
 
+- *PostgreSQL:* Base de datos.
+- *Mock-server:* API expuesta en el puerto 1080.
 
+---
 
-2.  #### Contexto #####  
-Tenemos diferentes salas que se identifican cada una con id diferente (long incremental) y en cada sala debemos poder guardar usuarios.  
-Una sala podrá tener N usuarios y un usuario podrá estar en una única sala. Cuando se guarda el usuario en la sala, se valida contra una api externa para chequear si el dni es válido y  
-se le asignara un id (long incremental) retornando como respuesta el id del usuario guardado.
+## APIs Expuestas en el Mock-server
 
+### 1. API check-dni
+- *Método:* PATCH
+- *URL:* http://localhost:1080/check-dni
+- *Body de la petición:*
+  json
+  {
+    "dni": "<dni>"
+  }
+  
+- *Respuestas:*
+  - *OK:* Código HTTP 200 para cualquier DNI.
+  - *KO:* Código HTTP 409 si el DNI es 99999999w.
 
+---
 
-3. Requisitos
+### 2. API notification
+#### Email
+- *Método:* POST
+- *URL:* http://localhost:1080/email
+- *Body de la petición:*
+  json
+  {
+    "email": "<email>",
+    "message": "<msg>"
+  }
+  
+- *Respuesta:*
+  - *OK:* Código HTTP 200.
 
-- name: no deberá de contener más de 6 caracteres
-- email: deberá de contener un @ y un .
-- El rol podrá ser admin o superadmin
-- Si el usuario existe por email deberemos de mandar una exception.
-- Chequear el dni contra una api externa expuesta en el mock-server
-- Cuando se guarde el usuario correctamente en la base de datos se notificará en base al rol:
-- admin -> un email con texto: "usuario guardado"
--	superadmin -> en sms con texto "usuario guardado"
-- Retornar el id generado
+#### SMS
+- *Método:* POST
+- *URL:* http://localhost:1080/sms
+- *Body de la petición:*
+  json
+  {
+    "phone": "<phone>",
+    "message": "<msg>"
+  }
+  
+- *Respuesta:*
+  - *OK:* Código HTTP 200.
 
-  4. Métodos a implementar
+---
 
-     - Método POST para guardar un usuario dentro de una sala 1 retornado un id
-       - el json de ejemplo que debemos guardar:
+## Contexto
 
-               {  
-                   "name": "pablo",  
-                   "email" : "email@email.com",  
-                   "phone": "677998899"  
-                   "rol": "admin"  
-                   "dni": "23454234W"  
-                } 
+La aplicación debe gestionar salas y usuarios bajo las siguientes condiciones:
 
-     - Método GET donde obtendremos el usuario en base al id del usuario obtenido que se aloja dentro de la sala 1. 
-    
-     - nota: no implementar la creación de sala e imaginar que la sala ya está creada. 
+- Cada sala tiene un ID único (long incremental).
+- Una sala puede contener N usuarios.
+- Un usuario puede estar en una única sala.
+- Al guardar el usuario en la sala, se valida su DNI contra una API externa.
+- Almacena el usuario en la base de datos y notifica según su rol.
+- Devuelve el ID del usuario almacenado.
 
+---
 
-5. Condiciones a tener en cuenta opcionales  
-   La aplicación podrá escalar a futuro pudiendo añadir diferentes contextos: pagos, pedidos....  
-   La aplicación podrá recibir 1 o millones de peticiones. (no hace falta implementar nada de kubernetes)
+## Requisitos
 
-7. Respuesta de la API  
-   crear usuario:
-   -  OK ->
-      - http code: 201 created
-      -  body:
-       ```sh
-               { id: <id> } 
-       ```
-   -  KO email o userName o dni:
-      -  http code: 409 conflic
-      -  body:
+### Validaciones:
+1. *Nombre:* No debe contener más de 6 caracteres.
+2. *Email:* Debe contener un @ y un ..
+3. *Rol:* Sólo puede ser admin o superadmin.
+4. Si el usuario ya existe (por email), se debe lanzar una excepción.
+5. Validar el DNI contra la API externa del mock-server.
 
-               {  
-               "code": 409  
-                  "message": "error validation <email | userName | dni"  
-               } 
+### Notificaciones:
+- *Admin:* Notificación por email con el mensaje: "usuario guardado".
+- *Superadmin:* Notificación por SMS con el mensaje: "usuario guardado".
 
+### Respuesta esperada:
+- *Retornar el ID generado.*
 
-      - KO usuario existe:  
-         -  http code: 409  
-         -  body: 
-         
-               {  
-                 "code": 409  
-                    "message": "error validation <email | userName | dni"  
-                 } 
+---
 
+## Métodos a Implementar
 
-8. Cosas que se valoran.
+### 1. Crear Usuario
+- *Método:* POST
+- *Descripción:* Guarda un usuario en la sala 1 y retorna su ID.
+- *Ejemplo de JSON a guardar:*
+  json
+  {
+    "name": "pablo",
+    "email": "email@email.com",
+    "phone": "677998899",
+    "rol": "admin",
+    "dni": "23454234W"
+  }
+  
+- *Respuestas:*
+  - *OK:* 
+    - Código HTTP 201 Created
+    - Body:
+      json
+      {
+        "id": "<id>"
+      }
+      
+  - *KO:* 
+    - Código HTTP 409 Conflict
+    - Body:
+      json
+      {
+        "code": 409,
+        "message": "error validation <email | userName | dni>"
+      }
+      
 
-   - test: unitarios, integración y aceptación
-   - arquitectura e implementación
-   - uso de spring y capación de abtracción del framework.
-   - patrones de diseño
+### 2. Obtener Usuario
+- *Método:* GET
+- *Descripción:* Obtiene un usuario basado en su ID dentro de la sala 1.
 
-9. Método de entrega
+---
 
-   Se deberá de entregar en un repositorio público personal con todos los commit realizado en la rama main.
+## Condiciones Opcionales
+
+1. *Escalabilidad:* La aplicación podrá escalar para manejar diferentes contextos (pagos, pedidos, etc.).
+2. *Capacidad:* La aplicación podrá procesar desde una hasta millones de peticiones (no es necesario implementar Kubernetes).
+
+---
+
+## Cosas que se Valoran
+
+1. *Pruebas:*
+   - Unitarias.
+   - De integración.
+   - De aceptación.
+2. *Arquitectura e implementación.*
+3. *Uso de Spring y abstracción del framework.*
+4. *Patrones de diseño.*
+
+---
+
+## Método de Entrega
+
+- Subir el proyecto a un repositorio público personal.
+- Todos los commits deben estar realizados en la rama main.

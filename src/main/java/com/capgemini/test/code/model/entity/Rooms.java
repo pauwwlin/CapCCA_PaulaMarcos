@@ -17,7 +17,7 @@ public class Rooms {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
-
+    @Column(unique = true)
     private String name;
 
     @OneToMany(mappedBy = "room")

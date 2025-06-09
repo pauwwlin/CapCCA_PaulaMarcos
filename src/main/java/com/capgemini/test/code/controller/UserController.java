@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,11 +19,8 @@ public class UserController {
 
     //Post para CREAR usuario
     @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody UserRequest request, BindingResult result) {
-        //Si hay errores en el bindingresult de validaciones del dto o conversiones, me saca el 400
-        if (result.hasErrors()) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserRequest request) {
+
         //si tod0 ok me lo crea
         UserResponse userResponse = userService.createUser(request);
         //Devuelvo un http 201(creado) y devuelvo en el cuerpo el dto que devuelve solo el id

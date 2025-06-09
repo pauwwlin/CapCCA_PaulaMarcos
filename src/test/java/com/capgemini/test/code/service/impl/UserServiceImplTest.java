@@ -133,30 +133,27 @@ public class UserServiceImplTest {
 
     @Test
     void createUser_InvalidDni() {
-
-        //Creo dto y simulo una peticion valida excepto el dni
+        // GIVEN
         UserRequest request = new UserRequest();
         request.setEmail("nuevo@email.com");
-        request.setDni("99999999W"); // -> INVALIDO
+        request.setDni("99999999W");
         request.setRole("admin");
 
-        // Simulo que al buscar ese email, no devuelva nada, como diciendo que no existe en la bd
+        // Mockeo el el correo que devuelva vacio, esta ok
         Mockito.when(userRepository.findByEmail("nuevo@email.com")).thenReturn(Optional.empty());
 
-        // Simulo que la sala existe (siempre la 1)
-        Rooms room = new Rooms();
-        room.setId(1L);
-        Mockito.when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        // Simulamos que el servicio de DNI devuelve un error 409
+        Request feignRequest = Request.create(Request.HttpMethod.POST, "http://localhost:8080/api/dni/check", Map.of(), "DNI inválido".getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        
+        Mockito.when(dniClient.check(any(CheckDniRequest.class))).thenThrow(new FeignException.Conflict("DNI inválido", feignRequest, null, null));
 
-        // Simulo que al llamar al mock-server con ese DNI, devuelve un 409 → Feign lanza excepción
-        Request fakeRequest = Request.create(Request.HttpMethod.PATCH, "http://localhost:1080/check-dni", Map.of(), new byte[0], StandardCharsets.UTF_8);
+        // WHEN & THEN
+        FeignException.Conflict exception = assertThrows(FeignException.Conflict.class, () -> userService.createUser(request));
 
-        Mockito.when(dniClient.check(any())).thenThrow(new FeignException.Conflict("dni conflict", fakeRequest, null, null));
-        // Verifico que al llamar a createuser se lanza una excpecion
-        assertThrows(FeignException.Conflict.class, () -> userService.createUser(request));
-
-        // Verifico que no se llegó a guardar nada, que nunca llamo al save()
-        Mockito.verify(userRepository, never()).save(any());
+        // Verificaciones adicionales
+        assertEquals("DNI inválido", exception.getMessage());
+        verify(userRepository, never()).save(any());
+        verify(userMapper, never()).toEntity(any());
     }
 
     @Test

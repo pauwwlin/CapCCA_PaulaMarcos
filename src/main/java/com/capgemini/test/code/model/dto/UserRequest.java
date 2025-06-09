@@ -15,22 +15,22 @@ public class UserRequest {
 
     @NotBlank
     @Size(max = 6)
-    public String name;
+    private String name;
 
     @NotBlank
-    @Size(max = 150)
     @Email
-    public String email;
+    @Size(max = 150)
+    private String email;
 
     @NotBlank
     @Size(max = 15)
-    public String dni;
+    private String dni;
 
     @NotBlank
     @Size(max = 15)
-    public String phone;
+    private String phone;
 
     @Pattern(regexp = "admin|superadmin", message = "El rol debe ser admin o superadmin")
-    public String role;
+    private String role;
 
 }

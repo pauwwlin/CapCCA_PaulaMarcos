@@ -155,7 +155,7 @@ public class UserControllerIntegrationTest {
         Rooms room = roomRepository.findById(1L).orElseThrow(() -> new RuntimeException("Sala 'sala1' no existe"));
         //Simulo crear un usuario y luego lo consulto
         User user = new User();
-        user.setId(3L);
+        user.setId(80L);
         user.setName("test");
         user.setDni("12345681A");
         user.setEmail("test3@email.com");

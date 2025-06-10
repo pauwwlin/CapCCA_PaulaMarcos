@@ -149,7 +149,7 @@ public class UserControllerIntegrationTest {
 
     @Transactional
     @Test
-    void getUserById_Ok() throws Exception {
+    void getUserById_Found() throws Exception {
 
         // Obtengo la sala1
         Rooms room = roomRepository.findById(1L).orElseThrow(() -> new RuntimeException("Sala 'sala1' no existe"));

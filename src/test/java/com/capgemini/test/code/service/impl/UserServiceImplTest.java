@@ -11,8 +11,6 @@ import com.capgemini.test.code.model.repository.RoomRepository;
 import com.capgemini.test.code.model.repository.UserRepository;
 import feign.FeignException;
 import feign.Request;
-import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,8 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -99,7 +96,7 @@ public class UserServiceImplTest {
         UserResponse response = userService.createUser(request);
 
         //THEN
-        Assertions.assertNotNull(response); //Compruebo que no devuelva null, es decir se construyo y devuelve un userresponse
+        assertNotNull(response); //Compruebo que no devuelva null, es decir se construyo y devuelve un userresponse
         assertEquals(99L, response.getId()); //Compruebo que el id devuelto es 99
 
         //Verifico notificacion por email porque es admin
@@ -144,7 +141,7 @@ public class UserServiceImplTest {
 
         // Simulamos que el servicio de DNI devuelve un error 409
         Request feignRequest = Request.create(Request.HttpMethod.POST, "http://localhost:8080/api/dni/check", Map.of(), "DNI inválido".getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
-        
+
         Mockito.when(dniClient.check(any(CheckDniRequest.class))).thenThrow(new FeignException.Conflict("DNI inválido", feignRequest, null, null));
 
         // WHEN & THEN
@@ -173,12 +170,13 @@ public class UserServiceImplTest {
         Mockito.when(roomRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Verifico que se lanza la excepcion
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
             userService.createUser(request);
         });
 
         //Y el mensaje que tengo definido en el serviceimpl
-        assertEquals("Sala no encontrada", exception.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("Sala no encontrada", exception.getReason());
     }
 
     @Test
@@ -272,4 +270,54 @@ public class UserServiceImplTest {
         // Verifico que se llame a sendSms que es lo que tocaria y que el mensaje es correcto
         Mockito.verify(notificationClient, Mockito.times(1)).sendSms(new SmsNotificationRequest("666777888", "usuario guardado"));
     }
+
+    @Test
+    void getUserById_Found() {
+        // GIVEN
+        Long userId = 99L;
+
+        // Usuario simulado que devuelve el repositorio
+        User user = new User();
+        user.setId(userId);
+        user.setName("test");
+        user.setEmail("test@email.com");
+
+        // DTO esperado
+        UserDetailResponse expectedResponse = new UserDetailResponse();
+        expectedResponse.setId(userId);
+
+        // Mockeo el repositorio y el mapper
+        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        Mockito.when(userMapper.toUserDetail(user)).thenReturn(expectedResponse);
+
+        // WHEN
+        UserDetailResponse response = userService.getUserById(userId);
+
+        // THEN
+        assertNotNull(response);
+        assertEquals(userId, response.getId());
+        Mockito.verify(userRepository).findById(userId);
+        Mockito.verify(userMapper).toUserDetail(user);
+    }
+
+    @Test
+    void getUserById_NotFound() {
+
+        // Simulo la peticion a un id inexistente
+        Mockito.when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // WHEN & THEN
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            userService.getUserById(99L);
+        });
+
+        // Verifica que devuelve 404 y el mensaje correcto
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("No existe un usuario con ese id", exception.getReason());
+
+        // Verifico que NO se llama al mapper
+        Mockito.verify(userMapper, Mockito.never()).toUserResponse(Mockito.any());
+    }
+
 }
+
